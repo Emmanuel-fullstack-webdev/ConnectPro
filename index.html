@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ConnectPro — AI Outreach Platform</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: #f5f7fa;
+            color: #1a1f2e;
+        }
+
+        /* Auth Container */
+        .auth-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #0a2540 0%, #051a2c 100%);
+            padding: 20px;
+        }
+
+        .auth-card {
+            background: white;
+            border-radius: 16px;
+            padding: 40px;
+            max-width: 420px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+
+        .logo {
+            font-size: 32px;
+            font-weight: 700;
+            color: #0a2540;
+            margin-bottom: 8px;
+        }
+
+        .subtitle {
+            color: #6b7280;
+            font-size: 14px;
+            margin-bottom: 28px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: #374151;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px 14px;
+            border: 1px solid #d1d5db;
+            border-radius: 10px;
+            font-size: 15px;
+            font-family: inherit;
+            transition: all 0.2s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #e8b137;
+            box-shadow: 0 0 0 3px rgba(232,177,55,0.1);
+        }
+
+        .btn {
+            width: 100%;
+            padding: 12px;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            font-size: 15px;
+            transition: all 0.2s;
+            margin-top: 8px;
+        }
+
+        .btn-primary {
+            background: #e8b137;
+            color: #0a2540;
+        }
+
+        .btn-primary:hover {
+            background: #c9961e;
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: white;
+            border: 1px solid #d1d5db;
+            color: #374151;
+        }
+
+        .link {
+            color: #e8b137;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .link:hover {
+            text-decoration: underline;
+        }
+
+        .divider {
+            margin: 20px 0;
+            position: relative;
+            text-align: center;
+        }
+
+        .divider::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: #e5e7eb;
+        }
+
+        .divider span {
+            background: white;
+            padding: 0 12px;
+            position: relative;
+            font-size: 12px;
+            color: #9ca3af;
+        }
+
+        /* Dashboard */
+        .dashboard-container {
+            display: none;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .logout-btn {
+            background: none;
+            border: 1px solid #d1d5db;
+            padding: 8px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-bottom: 32px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 24px;
+            border-radius: 12px;
+            border: 1px solid #e5e7eb;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 36px;
+            font-weight: 700;
+            color: #e8b137;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: #6b7280;
+            margin-top: 4px;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .tab {
+            padding: 12px 24px;
+            cursor: pointer;
+            border: none;
+            background: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .tab.active {
+            color: #e8b137;
+            border-bottom: 2px solid #e8b137;
+        }
+
+        .panel {
+            display: none;
+            background: white;
+            border-radius: 12px;
+            border: 1px solid #e5e7eb;
+            padding: 24px;
+        }
+
+        .panel.active {
+            display: block;
+        }
+
+        .contact-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .contact-name {
+            font-weight: 600;
+            font-size: 15px;
+        }
+
+        .contact-email {
+            font-size: 13px;
+            color: #6b7280;
+            margin-top: 2px;
+        }
+
+        .contact-tag {
+            display: inline-block;
+            font-size: 11px;
+            background: #f3f4f6;
+            padding: 2px 10px;
+            border-radius: 20px;
+            margin-top: 4px;
+        }
+
+        .delete-btn {
+            background: none;
+            border: none;
+            color: #ef4444;
+            cursor: pointer;
+            font-size: 13px;
+            padding: 6px 12px;
+            border-radius: 6px;
+        }
+
+        .delete-btn:hover {
+            background: #fee2e2;
+        }
+
+        .add-contact-form {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .add-contact-form input {
+            flex: 2;
+        }
+
+        .add-contact-form select {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 10px;
+            font-family: inherit;
+        }
+
+        .ai-output {
+            background: #fef5e6;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            white-space: pre-wrap;
+            line-height: 1.6;
+            font-size: 14px;
+        }
+
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 10px;
+            font-family: inherit;
+            font-size: 14px;
+            resize: vertical;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: #1f2937;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            z-index: 1000;
+            animation: slideIn 0.3s ease;
+        }
+
+        .toast.success { background: #10b981; }
+        .toast.error { background: #ef4444; }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .stats {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+            .add-contact-form {
+                flex-direction: column;
+            }
+            .auth-card {
+                padding: 28px;
+                margin: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Auth Screen - SIGN UP SHOWN FIRST -->
+<div id="authScreen" class="auth-container">
+    <div class="auth-card">
+        <div class="logo">ConnectPro</div>
+        <div class="subtitle">Start your free trial →</div>
+        
+        <!-- Sign Up Panel (shown first) -->
+        <div id="signupPanel">
+            <div class="form-group">
+                <label>Full Name</label>
+                <input type="text" id="signupName" placeholder="Alex Chen" autofocus>
+            </div>
+            <div class="form-group">
+                <label>Email</label>
+                <input type="email" id="signupEmail" placeholder="you@example.com">
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" id="signupPassword" placeholder="Create a password (min 6 characters)">
+            </div>
+            <button class="btn btn-primary" id="signupBtn">Create Free Account →</button>
+            
+            <div class="divider"><span>Already have an account?</span></div>
+            <button class="btn btn-secondary" id="showLoginBtn">Sign In Instead</button>
+        </div>
+
+        <!-- Login Panel (hidden initially) -->
+        <div id="loginPanel" class="hidden">
+            <div class="form-group">
+                <label>Email</label>
+                <input type="email" id="loginEmail" placeholder="you@example.com">
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" id="loginPassword" placeholder="Your password">
+            </div>
+            <button class="btn btn-primary" id="loginBtn">Sign In</button>
+            
+            <div class="divider"><span>New here?</span></div>
+            <button class="btn btn-secondary" id="showSignupBtn">Create Account</button>
+        </div>
+    </div>
+</div>
+
+<!-- Dashboard Screen -->
+<div id="dashboardScreen" class="dashboard-container">
+    <div class="header">
+        <h1 id="welcomeMsg">ConnectPro</h1>
+        <button class="logout-btn" id="logoutBtn">Sign Out</button>
+    </div>
+
+    <div class="stats">
+        <div class="stat-card">
+            <div class="stat-number" id="statContacts">0</div>
+            <div class="stat-label">Contacts</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number" id="statSent">0</div>
+            <div class="stat-label">Messages Sent</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number" id="statCredits">100</div>
+            <div class="stat-label">AI Credits Left</div>
+        </div>
+    </div>
+
+    <div class="tabs">
+        <button class="tab active" data-tab="contacts">📒 Contacts</button>
+        <button class="tab" data-tab="ai">🤖 AI Generator</button>
+        <button class="tab" data-tab="broadcast">📢 Broadcast</button>
+    </div>
+
+    <!-- Contacts Panel -->
+    <div id="contactsPanel" class="panel active">
+        <h3 style="margin-bottom: 16px;">Your Contacts</h3>
+        <div id="contactList"></div>
+        <div class="add-contact-form">
+            <input type="text" id="newContactName" placeholder="Name">
+            <input type="email" id="newContactEmail" placeholder="Email">
+            <select id="newContactTag">
+                <option>Lead</option>
+                <option>Customer</option>
+                <option>Partner</option>
+            </select>
+            <button class="btn-primary" id="addContactBtn" style="width: auto; padding: 12px 24px;">+ Add</button>
+        </div>
+    </div>
+
+    <!-- AI Panel -->
+    <div id="aiPanel" class="panel">
+        <h3 style="margin-bottom: 16px;">AI Message Generator</h3>
+        <div class="form-group">
+            <label>What do you want to say?</label>
+            <input type="text" id="aiPrompt" placeholder="e.g., Reach out to a potential collaborator">
+        </div>
+        <div class="form-group">
+            <label>Tone</label>
+            <select id="aiTone" style="width: 200px;">
+                <option value="professional">Professional</option>
+                <option value="friendly">Friendly</option>
+                <option value="casual">Casual</option>
+                <option value="persuasive">Persuasive</option>
+            </select>
+        </div>
+        <button class="btn-primary" id="generateBtn" style="width: auto; padding: 12px 24px;">✨ Generate</button>
+        <div id="aiResult" class="ai-output hidden"></div>
+    </div>
+
+    <!-- Broadcast Panel -->
+    <div id="broadcastPanel" class="panel">
+        <h3 style="margin-bottom: 16px;">Send Broadcast</h3>
+        <div class="form-group">
+            <label>Campaign Name</label>
+            <input type="text" id="broadcastName" placeholder="e.g., Summer Sale Announcement">
+        </div>
+        <div class="form-group">
+            <label>Message</label>
+            <textarea id="broadcastMessage" rows="5" placeholder="Write your message here..."></textarea>
+        </div>
+        <button class="btn-primary" id="sendBroadcastBtn" style="width: auto; padding: 12px 24px;">📨 Send to All Contacts</button>
+    </div>
+</div>
+
+<script>
+    // Supabase Configuration
+    const SUPABASE_URL = "https://eohibetiwoairtimrxwz.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVvaGliZXRpd29haXJ0aW1yeHd6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk1MDA5MzEsImV4cCI6MjA5NTA3NjkzMX0.yn4Tf-h2FjgVzEnlzMoBDz5l2ucjVVVPkbw57oUyQjk";
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // State
+    let currentUser = null;
+    let contacts = [];
+    let messages = [];
+    let aiUsage = { used: 0, limit: 100 };
+
+    // Helper Functions
+    function showToast(msg, type) {
+        let toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        toast.innerText = msg;
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 3000);
+    }
+
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str.replace(/[&<>]/g, (m) => {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            return m;
+        });
+    }
+
+    async function loadData() {
+        if (!currentUser) return;
+        
+        let prefix = `connectpro_${currentUser.id}_`;
+        let savedContacts = localStorage.getItem(prefix + 'contacts');
+        let savedMessages = localStorage.getItem(prefix + 'messages');
+        let savedUsage = localStorage.getItem(prefix + 'ai_usage');
+        
+        if (savedContacts) contacts = JSON.parse(savedContacts);
+        if (savedMessages) messages = JSON.parse(savedMessages);
+        if (savedUsage) aiUsage = JSON.parse(savedUsage);
+        
+        if (contacts.length === 0) {
+            contacts = [
+                { id: Date.now(), name: "Sarah Chen", email: "sarah@example.com", tag: "Lead" },
+                { id: Date.now() + 1, name: "Michael Okonkwo", email: "michael@example.com", tag: "Customer" }
+            ];
+            saveData();
+        }
+        
+        render();
+    }
+
+    function saveData() {
+        if (!currentUser) return;
+        let prefix = `connectpro_${currentUser.id}_`;
+        localStorage.setItem(prefix + 'contacts', JSON.stringify(contacts));
+        localStorage.setItem(prefix + 'messages', JSON.stringify(messages));
+        localStorage.setItem(prefix + 'ai_usage', JSON.stringify(aiUsage));
+    }
+
+    function render() {
+        // Render contacts
+        let contactDiv = document.getElementById('contactList');
+        if (contacts.length === 0) {
+            contactDiv.innerHTML = '<p style="color:#999; text-align:center; padding:20px;">✨ No contacts yet. Add your first contact above.</p>';
+        } else {
+            let html = '';
+            for (let c of contacts) {
+                html += `<div class="contact-item">
+                            <div>
+                                <div class="contact-name">${escapeHtml(c.name)}</div>
+                                <div class="contact-email">${escapeHtml(c.email)}</div>
+                                <span class="contact-tag">${c.tag}</span>
+                            </div>
+                            <button class="delete-btn" data-id="${c.id}">Delete</button>
+                         </div>`;
+            }
+            contactDiv.innerHTML = html;
+            
+            document.querySelectorAll('.delete-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    let id = parseInt(btn.getAttribute('data-id'));
+                    contacts = contacts.filter(c => c.id !== id);
+                    saveData();
+                    render();
+                    showToast('Contact removed', 'success');
+                });
+            });
+        }
+        
+        // Update stats
+        let totalSent = messages.reduce((sum, m) => sum + (m.recipients || 0), 0);
+        document.getElementById('statContacts').innerText = contacts.length;
+        document.getElementById('statSent').innerText = totalSent;
+        document.getElementById('statCredits').innerText = aiUsage.limit - aiUsage.used;
+    }
+
+    function addContact() {
+        let name = document.getElementById('newContactName').value.trim();
+        let email = document.getElementById('newContactEmail').value.trim();
+        let tag = document.getElementById('newContactTag').value;
+        
+        if (!name || !email) {
+            showToast('Name and email required', 'error');
+            return;
+        }
+        
+        contacts.push({ id: Date.now(), name, email, tag });
+        saveData();
+        render();
+        document.getElementById('newContactName').value = '';
+        document.getElementById('newContactEmail').value = '';
+        showToast('Contact added', 'success');
+    }
+
+    function generateAIMessage() {
+        let prompt = document.getElementById('aiPrompt').value.trim();
+        let tone = document.getElementById('aiTone').value;
+        
+        if (!prompt) {
+            showToast('Describe what you want to say', 'error');
+            return;
+        }
+        
+        if (aiUsage.used >= aiUsage.limit) {
+            showToast('AI credits used up. Upgrade to Pro for more!', 'error');
+            return;
+        }
+        
+        let responses = {
+            professional: `Dear [Name],\n\nI've been following your work and I'm genuinely impressed. I'd love to explore how we might collaborate.\n\nWould you be open to a quick chat next week?\n\nBest regards,\n[Your Name]`,
+            friendly: `Hey [Name]! 👋\n\nLove what you're doing! I think there's an opportunity for us to work together. Would love to chat more.\n\nCheers,\n[Your Name]`,
+            casual: `Hey [Name]!\n\nSaw your stuff — really cool! I've got an idea I think you'd love. Hit me back when you have a sec?\n\nTalk soon,\n[Your Name]`,
+            persuasive: `Hi [Name],\n\nYour audience would love what we're building. Let's hop on a call to explore collaboration.\n\nLooking forward,\n[Your Name]`
+        };
+        
+        let message = responses[tone] || responses.professional;
+        let resultDiv = document.getElementById('aiResult');
+        resultDiv.innerHTML = escapeHtml(message).replace(/\n/g, '<br>');
+        resultDiv.classList.remove('hidden');
+        
+        aiUsage.used++;
+        saveData();
+        render();
+        showToast('✨ Message generated!', 'success');
+    }
+
+    async function sendBroadcast() {
+        let name = document.getElementById('broadcastName').value.trim();
+        let message = document.getElementById('broadcastMessage').value.trim();
+        
+        if (!name || !message) {
+            showToast('Campaign name and message required', 'error');
+            return;
+        }
+        
+        if (contacts.length === 0) {
+            showToast('Add some contacts first', 'error');
+            return;
+        }
+        
+        showToast(`📨 Sending "${name}" to ${contacts.length} contacts...`, 'success');
+        
+        messages.unshift({
+            id: Date.now(),
+            title: name,
+            recipients: contacts.length,
+            date: new Date().toISOString()
+        });
+        
+        saveData();
+        render();
+        
+        document.getElementById('broadcastName').value = '';
+        document.getElementById('broadcastMessage').value = '';
+        
+        showToast(`✅ Sent to ${contacts.length} contacts!`, 'success');
+    }
+
+    // Tab switching
+    function switchTab(tabId) {
+        document.querySelectorAll('.panel').forEach(panel => panel.classList.remove('active'));
+        document.getElementById(tabId + 'Panel').classList.add('active');
+        document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+        document.querySelector(`.tab[data-tab="${tabId}"]`).classList.add('active');
+    }
+
+    // Auth Functions
+    async function signUp(email, password, name) {
+        let { error } = await supabase.auth.signUp({
+            email: email,
+            password: password,
+            options: { data: { full_name: name } }
+        });
+        if (error) throw error;
+    }
+
+    async function signIn(email, password) {
+        let { error } = await supabase.auth.signInWithPassword({
+            email: email,
+            password: password
+        });
+        if (error) throw error;
+    }
+
+    async function signOut() {
+        await supabase.auth.signOut();
+        currentUser = null;
+        document.getElementById('authScreen').style.display = 'flex';
+        document.getElementById('dashboardScreen').style.display = 'none';
+    }
+
+    async function checkSession() {
+        let { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+            currentUser = session.user;
+            document.getElementById('authScreen').style.display = 'none';
+            document.getElementById('dashboardScreen').style.display = 'block';
+            let name = currentUser.user_metadata?.full_name || currentUser.email.split('@')[0];
+            document.getElementById('welcomeMsg').innerHTML = `Welcome back, ${name} 🎉`;
+            await loadData();
+        }
+    }
+
+    // Event Listeners
+    document.getElementById('signupBtn').addEventListener('click', async () => {
+        let name = document.getElementById('signupName').value.trim();
+        let email = document.getElementById('signupEmail').value.trim();
+        let password = document.getElementById('signupPassword').value;
+        
+        if (!name || !email || !password) {
+            showToast('All fields required', 'error');
+            return;
+        }
+        if (password.length < 6) {
+            showToast('Password must be at least 6 characters', 'error');
+            return;
+        }
+        
+        try {
+            await signUp(email, password, name);
+            showToast('Account created! Please sign in.', 'success');
+            document.getElementById('signupPanel').classList.add('hidden');
+            document.getElementById('loginPanel').classList.remove('hidden');
+            document.getElementById('loginEmail').value = email;
+        } catch(e) {
+            showToast(e.message, 'error');
+        }
+    });
+
+    document.getElementById('loginBtn').addEventListener('click', async () => {
+        let email = document.getElementById('loginEmail').value.trim();
+        let password = document.getElementById('loginPassword').value;
+        
+        if (!email || !password) {
+            showToast('Email and password required', 'error');
+            return;
+        }
+        
+        try {
+            await signIn(email, password);
+            await checkSession();
+            showToast('Signed in!', 'success');
+        } catch(e) {
+            showToast(e.message, 'error');
+        }
+    });
+
+    document.getElementById('showLoginBtn').addEventListener('click', () => {
+        document.getElementById('signupPanel').classList.add('hidden');
+        document.getElementById('loginPanel').classList.remove('hidden');
+    });
+
+    document.getElementById('showSignupBtn').addEventListener('click', () => {
+        document.getElementById('loginPanel').classList.add('hidden');
+        document.getElementById('signupPanel').classList.remove('hidden');
+    });
+
+    document.getElementById('logoutBtn').addEventListener('click', async () => {
+        await signOut();
+        showToast('Signed out', 'success');
+    });
+
+    document.getElementById('addContactBtn').addEventListener('click', addContact);
+    document.getElementById('generateBtn').addEventListener('click', generateAIMessage);
+    document.getElementById('sendBroadcastBtn').addEventListener('click', sendBroadcast);
+
+    document.querySelectorAll('.tab').forEach(tab => {
+        tab.addEventListener('click', () => switchTab(tab.getAttribute('data-tab')));
+    });
+
+    checkSession();
+</script>
+</body>
+</html>
